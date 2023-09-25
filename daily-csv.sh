@@ -1,9 +1,13 @@
 #!/bin/bash
 #
+# @usage: see @cron section
+# @cron: `30 08 * * * root /srv/ops.sh/daily-csv.sh`
 # @author: Sing Yu Chan
 # @version: 20230925
 #
 # shellcheck disable=SC2155
+
+OUTPUT2LOG="${OUTPUT2LOG:=0}"
 
 _ceil() {
   awk 'function ceil(x, y){y=int(x); return(x>y?y+1:y)} {print ceil($0)}'
@@ -21,6 +25,23 @@ _byte2gb() {
 
 _to_csv() {
   sed ':a;N;$!ba;s/\n/,/g'
+}
+
+_get_default_iface() {
+  ip route get 8.8.8.8 | sed 's/^.*src \([^ ]*\).*$/\1/;q'
+}
+
+_get_log_dir() {
+  local cur_dir=$(dirname "$0")
+  local sub_dir=$(basename "$0" .sh)
+  echo "${cur_dir}/${sub_dir}_logs"
+}
+
+_get_log_file() {
+  local p1=$(basename "$0" .sh)
+  local p2=$(_get_default_iface | sed 's/\./-/g')
+  local p3=$(date +%Y-%m)
+  echo "${p1}_${p2}_${p3}.csv"
 }
 
 real_cpu_usage() {
@@ -86,4 +107,15 @@ combine_output() {
   get_disk_usage_percent
 }
 
-combine_output | _to_csv
+main() {
+  if [ "$OUTPUT2LOG" = 1 ]; then
+    local log_dir=$(_get_log_dir)
+    local log_file=$(_get_log_file)
+    [ -d "$log_dir" ] || mkdir "$log_dir"
+    combine_output | _to_csv | tee -a "$log_dir/$log_file"
+  else
+    combine_output | _to_csv
+  fi
+}
+
+main
