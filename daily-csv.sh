@@ -1,11 +1,14 @@
 #!/bin/bash
 #
 # @usage: see @cron section
-# @cron: `30 08 * * * root /srv/ops.sh/daily-csv.sh`
+# @cron: `30 08 * * * root OUTPUT2LOG=1 /srv/ops.sh/daily-csv.sh`
 # @author: Sing Yu Chan
 # @version: 20230925
 #
 # shellcheck disable=SC2155
+
+# workaround for PATH environment variable incomplete
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 OUTPUT2LOG="${OUTPUT2LOG:=0}"
 
