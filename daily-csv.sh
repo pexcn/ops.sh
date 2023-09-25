@@ -59,7 +59,7 @@ get_disk_info() {
 }
 
 get_disk_size() {
-  get_disk_info | awk '{print $1}' | _byte2gb
+  get_disk_info | awk '{print $1}' | _byte2gb | _ceil
 }
 
 get_disk_usage() {
