@@ -3,7 +3,7 @@
 # @usage: see @cron section
 # @cron: `30 08 * * * root OUTPUT2LOG=1 LOGIN_INFO="SYSDBA/SYSDBA@127.0.0.1:5236" /srv/ops.sh/daily-dm-csv.sh`
 # @author: Sing Yu Chan
-# @version: 20230926
+# @version: 20230926-2
 #
 # shellcheck disable=SC2155
 
@@ -20,7 +20,7 @@ OUTPUT2LOG="${OUTPUT2LOG:=0}"
 LOGIN_INFO="${LOGIN_INFO:=SYSDBA/SYSDBA@127.0.0.1:5236}"
 
 DM_PROCESS="dmserver"
-DM_TABLESPACE_DIR="/dm/dmdata/DMSERVER/tablespace"
+DM_DATA_DIR="/dm/dmdata"
 
 _exec_sql() {
   local sql="$1"
@@ -106,7 +106,7 @@ get_tablespace_maximum_size() {
 }
 
 get_tablespace_size() {
-  du -sh $DM_TABLESPACE_DIR | awk '{print $1}'
+  find $DM_DATA_DIR -type d -name "tablespace" -exec du -csh {} + | tail -1 | awk '{print $1}'
 }
 
 combine_output() {
