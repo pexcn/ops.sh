@@ -17,11 +17,12 @@ ORACLE_CONTAINER="oracle-ee"
 
 _exec_sql() {
   local sql="$1"
-  docker exec -i $ORACLE_CONTAINER sqlplus -S "$LOGIN_INFO" <<-EOF
+  docker exec -i $ORACLE_CONTAINER sqlplus -S /NOLOG <<-EOF
 	SET HEADING OFF;
 	SET FEEDBACK OFF;
 	SET NEWPAGE NONE;
 	SET MARK CSV ON QUOTE OFF;
+	CONNECT $LOGIN_INFO
 	$sql
 	exit;
 	EOF
