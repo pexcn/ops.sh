@@ -103,7 +103,10 @@ parse_args() {
 
   [ -n "$FETCH_TYPE" ] || FETCH_TYPE="daily-csv"
   [ -n "$FETCH_MONTH" ] || FETCH_MONTH="$(date +%Y-%m)"
-  [ -n "$TARGET_FILE" ] || error "\`-T\` parameter must be specified."
+  [ -n "$TARGET_FILE" ] || {
+    error "\`-T\` parameter must be specified."
+    exit 1
+  }
 }
 
 get_csv_path() {
@@ -120,7 +123,13 @@ download_csv() {
   local user="${1%@*}"
   local host="${1##*@}"
   local path="$(get_csv_path "$1" "$host")"
-  curl -sSk --user "$user" "sftp://${host}/${path}" -O --create-dirs --output-dir "${FETCH_TYPE}_logs"
+  debug "target: ${user}@${host}:${path}"
+
+  if curl -sSk --user "$user" "sftp://${host}/${path}" -O --create-dirs --output-dir "${FETCH_TYPE}_logs"; then
+    info "[$host] => OK."
+  else
+    error "[$host] => NOK!"
+  fi
 }
 
 main() {
