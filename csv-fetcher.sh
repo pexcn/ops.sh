@@ -7,7 +7,7 @@
 # shellcheck disable=SC2155,SC3060
 
 PROG_NAME="${0##*/}"
-PROG_VER=20231010
+PROG_VER=20231011
 
 _get_time() {
   date '+%Y-%m-%d %T'
@@ -59,6 +59,7 @@ OPTIONS:
                                                         daily-mariadb-csv, daily-oracle-csv.
     -m, --month [FETCH_MONTH]     Fetch month, default is current month.
     -T, --target <TARGET_FILE>    Targets and credential information.
+    -s, --scp                     Use scp instead of curl.
     -v, --verbose                 Verbose logging.
     -V, --version                 Show version.
     -h, --help                    Show this help message then exit.
@@ -80,6 +81,10 @@ parse_args() {
       -T | --target)
         TARGET_FILE="$2"
         shift 2
+        ;;
+      -s | --scp)
+        USE_SCP=1
+        shift 1
         ;;
       -v | --verbose)
         VERBOSE=1
@@ -107,6 +112,13 @@ parse_args() {
     error "\`-T\` parameter must be specified."
     exit 1
   }
+  [ -z "$USE_SCP" ] || {
+    warn "downloading csv via scp is not recommended, unless the server does not support sftp."
+    command -v sshpass >/dev/null || {
+      error "scp requires sshpass, but \`sshpass\` command not found."
+      exit 1
+    }
+  }
 }
 
 get_csv_path() {
@@ -132,9 +144,26 @@ download_csv() {
   fi
 }
 
+download_csv_via_scp() {
+  local user="${1%@*}"
+  local host="${1##*@}"
+  local path="$(get_csv_path "$1" "$host")"
+  debug "target: ${user}@${host}:${path}"
+
+  local output_dir="${FETCH_TYPE}_logs"
+  [ -d "$output_dir" ] || mkdir -p "$output_dir"
+  local username="${user%:*}"
+  local password="${user##*:}"
+  sshpass -p "$password" scp -O -q -o "StrictHostKeyChecking=no" "${username}@${host}:${path}" "$output_dir" 2>/dev/null
+}
+
 main() {
   while read -r target; do
-    download_csv "$target"
+    if [ "$USE_SCP" != 1 ]; then
+      download_csv "$target"
+    else
+      download_csv_via_scp "$target"
+    fi
   done <"$TARGET_FILE"
 }
 
