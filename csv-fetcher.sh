@@ -154,7 +154,11 @@ download_csv_via_scp() {
   [ -d "$output_dir" ] || mkdir -p "$output_dir"
   local username="${user%:*}"
   local password="${user##*:}"
-  sshpass -p "$password" scp -O -q -o "StrictHostKeyChecking=no" "${username}@${host}:${path}" "$output_dir" 2>/dev/null
+  if sshpass -p "$password" scp -O -q -o "StrictHostKeyChecking=no" "${username}@${host}:${path}" "$output_dir" 2>/dev/null; then
+    info "[$host] => OK."
+  else
+    error "[$host] => NOK!"
+  fi
 }
 
 main() {
