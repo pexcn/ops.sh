@@ -7,7 +7,7 @@
 # shellcheck disable=SC2155,SC3060
 
 PROG_NAME="${0##*/}"
-PROG_VER=20231011
+PROG_VER=20231013
 
 _get_time() {
   date '+%Y-%m-%d %T'
@@ -55,10 +55,11 @@ USAGE:
     $PROG_NAME [OPTIONS]
 
 OPTIONS:
-    -t, --type [FETCH_TYPE]       Fetch type, optional: daily-csv (default), daily-dm-csv,
-                                                        daily-mariadb-csv, daily-oracle-csv.
+    -t, --type [FETCH_TYPE]       Fetch type, optional: \`daily-csv\` (default), \`daily-dm-csv\`,
+                                                        \`daily-mariadb-csv\`, \`daily-oracle-csv\`.
     -m, --month [FETCH_MONTH]     Fetch month, default is current month.
     -T, --target <TARGET_FILE>    Targets and credential information.
+    -i, --instance                Database instance name, currently only works with \`daily-oracle-csv\`.
     -s, --scp                     Use scp instead of curl.
     -v, --verbose                 Verbose logging.
     -V, --version                 Show version.
@@ -80,6 +81,10 @@ parse_args() {
         ;;
       -T | --target)
         TARGET_FILE="$2"
+        shift 2
+        ;;
+      -i | --instance)
+        INSTANCE_NAME="$2"
         shift 2
         ;;
       -s | --scp)
@@ -106,19 +111,31 @@ parse_args() {
   done
   debug "received arguments: $args"
 
+  # parameters initialize
   [ -n "$FETCH_TYPE" ] || FETCH_TYPE="daily-csv"
   [ -n "$FETCH_MONTH" ] || FETCH_MONTH="$(date +%Y-%m)"
-  [ -n "$TARGET_FILE" ] || {
-    error "\`-T\` parameter must be specified."
+
+  # parameters checking
+  if [ -z "$TARGET_FILE" ]; then
+    error "\`-T | --target\` parameter must be specified."
     exit 1
-  }
-  [ -z "$USE_SCP" ] || {
+  fi
+  if [ -n "$INSTANCE_NAME" ]; then
+    if [ "$FETCH_TYPE" = "daily-oracle-csv" ]; then
+      debug "fetch log instance name: ${INSTANCE_NAME}."
+      INSTANCE_NAME="_${INSTANCE_NAME}"
+    else
+      warn "\`-i | --instance\` parameter will be ignore."
+      unset INSTANCE_NAME
+    fi
+  fi
+  if [ -n "$USE_SCP" ]; then
     warn "downloading csv via scp is not recommended, unless the server does not support sftp."
     command -v sshpass >/dev/null || {
       error "scp requires sshpass, but \`sshpass\` command not found."
       exit 1
     }
-  }
+  fi
 }
 
 get_csv_path() {
@@ -126,8 +143,9 @@ get_csv_path() {
   local dir="${FETCH_TYPE}_logs"
   local _f1="$FETCH_TYPE"
   local _f2="${2//./-}"
+  local _f2_sfx="$INSTANCE_NAME"
   local _f3="$FETCH_MONTH"
-  local file="${_f1}_${_f2}_${_f3}.csv"
+  local file="${_f1}_${_f2}${_f2_sfx}_${_f3}.csv"
   echo "${base}/${dir}/${file}"
 }
 
