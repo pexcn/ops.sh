@@ -163,6 +163,8 @@ download_csv_via_scp() {
 
 main() {
   while read -r target; do
+    [ -n "$target" ] || continue
+    [ -n "${target%%#*}" ] || continue
     if [ "$USE_SCP" != 1 ]; then
       download_csv "$target"
     else
