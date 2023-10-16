@@ -4,10 +4,10 @@
 # @author: Sing Yu Chan
 # @version: `./csv-fetcher.sh --version`
 #
-# shellcheck disable=SC2155,SC3060
+# shellcheck disable=SC2155,SC3060,SC3011
 
 PROG_NAME="${0##*/}"
-PROG_VER=20231013
+PROG_VER=20231016
 
 _get_time() {
   date '+%Y-%m-%d %T'
@@ -59,7 +59,6 @@ OPTIONS:
                                                         \`daily-mariadb-csv\`, \`daily-oracle-csv\`.
     -m, --month [FETCH_MONTH]     Fetch month, default is current month.
     -T, --target <TARGET_FILE>    Targets and credential information.
-    -i, --instance                Database instance name, currently only works with \`daily-oracle-csv\`.
     -s, --scp                     Use scp instead of curl.
     -v, --verbose                 Verbose logging.
     -V, --version                 Show version.
@@ -81,10 +80,6 @@ parse_args() {
         ;;
       -T | --target)
         TARGET_FILE="$2"
-        shift 2
-        ;;
-      -i | --instance)
-        INSTANCE_NAME="$2"
         shift 2
         ;;
       -s | --scp)
@@ -120,15 +115,6 @@ parse_args() {
     error "\`-T | --target\` parameter must be specified."
     exit 1
   fi
-  if [ -n "$INSTANCE_NAME" ]; then
-    if [ "$FETCH_TYPE" = "daily-oracle-csv" ]; then
-      debug "fetch log instance name: ${INSTANCE_NAME}."
-      INSTANCE_NAME="_${INSTANCE_NAME}"
-    else
-      warn "\`-i | --instance\` parameter will be ignore."
-      unset INSTANCE_NAME
-    fi
-  fi
   if [ -n "$USE_SCP" ]; then
     warn "downloading csv via scp is not recommended, unless the server does not support sftp."
     command -v sshpass >/dev/null || {
@@ -138,24 +124,31 @@ parse_args() {
   fi
 }
 
+get_instance_suffix() {
+  grep -q '/' <<<"$1" || return 0
+  echo "_${1#*/}"
+}
+
 get_csv_path() {
   local base="/srv/ops.sh"
   local dir="${FETCH_TYPE}_logs"
   local _f1="$FETCH_TYPE"
   local _f2="${2//./-}"
-  local _f2_sfx="$INSTANCE_NAME"
+  local _f2_sfx="$3"
   local _f3="$FETCH_MONTH"
   local file="${_f1}_${_f2}${_f2_sfx}_${_f3}.csv"
   echo "${base}/${dir}/${file}"
 }
 
 download_csv() {
-  local user="${1%@*}"
-  local host="${1##*@}"
-  local path="$(get_csv_path "$1" "$host")"
-  debug "target: ${user}@${host}:${path}"
+  local login="${1%@*}"
+  local target="${1##*@}"
+  local host="${target%%/*}"
+  local instance="$(get_instance_suffix "$target")"
+  local path="$(get_csv_path "$1" "$host" "$instance")"
+  debug "target: ${login}@${target}:${path}"
 
-  if curl -sSk --user "$user" "sftp://${host}/${path}" -O --create-dirs --output-dir "${FETCH_TYPE}_logs"; then
+  if curl -sSk --user "$login" "sftp://${host}/${path}" -O --create-dirs --output-dir "${FETCH_TYPE}_logs"; then
     info "[$host] => OK."
   else
     error "[$host] => NOK!"
@@ -163,15 +156,17 @@ download_csv() {
 }
 
 download_csv_via_scp() {
-  local user="${1%@*}"
-  local host="${1##*@}"
-  local path="$(get_csv_path "$1" "$host")"
-  debug "target: ${user}@${host}:${path}"
+  local login="${1%@*}"
+  local target="${1##*@}"
+  local host="${target%%/*}"
+  local instance="$(get_instance_suffix "$target")"
+  local path="$(get_csv_path "$1" "$host" "$instance")"
+  debug "target: ${login}@${target}:${path}"
 
   local output_dir="${FETCH_TYPE}_logs"
   [ -d "$output_dir" ] || mkdir -p "$output_dir"
-  local username="${user%:*}"
-  local password="${user##*:}"
+  local username="${login%:*}"
+  local password="${login##*:}"
   if sshpass -p "$password" scp -O -q -o "StrictHostKeyChecking=no" "${username}@${host}:${path}" "$output_dir" 2>/dev/null; then
     info "[$host] => OK."
   else
