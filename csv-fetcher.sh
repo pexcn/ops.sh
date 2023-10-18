@@ -7,7 +7,9 @@
 # shellcheck disable=SC2155,SC3060,SC3011
 
 PROG_NAME="${0##*/}"
-PROG_VER=20231016
+PROG_VER=20231018
+
+CSV_LIST=''
 
 _get_time() {
   date '+%Y-%m-%d %T'
@@ -140,6 +142,13 @@ get_csv_path() {
   echo "${base}/${dir}/${file}"
 }
 
+add_csv_list() {
+  local val="$1"
+  local d=' '
+  [ -z "$CSV_LIST" ] || CSV_LIST="${CSV_LIST}${d}"
+  CSV_LIST="${CSV_LIST}${val}"
+}
+
 download_csv() {
   local login="${1%@*}"
   local target="${1##*@}"
@@ -148,7 +157,9 @@ download_csv() {
   local path="$(get_csv_path "$1" "$host" "$instance")"
   debug "target: ${login}@${target}:${path}"
 
-  if curl -sSk --user "$login" "sftp://${host}/${path}" -O --create-dirs --output-dir "${FETCH_TYPE}_logs"; then
+  local output_dir="${FETCH_TYPE}_logs"
+  if curl -sSk --user "$login" "sftp://${host}/${path}" -O --create-dirs --output-dir "$output_dir"; then
+    add_csv_list "${output_dir}/$(basename "$path")"
     info "[$host] => OK."
   else
     error "[$host] => NOK!"
@@ -168,13 +179,14 @@ download_csv_via_scp() {
   local username="${login%:*}"
   local password="${login##*:}"
   if sshpass -p "$password" scp -O -q -o "StrictHostKeyChecking=no" "${username}@${host}:${path}" "$output_dir" 2>/dev/null; then
+    add_csv_list "${output_dir}/$(basename "$path")"
     info "[$host] => OK."
   else
     error "[$host] => NOK!"
   fi
 }
 
-main() {
+csv_fetch() {
   while read -r target; do
     [ -n "$target" ] || continue
     [ -n "${target%%#*}" ] || continue
@@ -186,5 +198,16 @@ main() {
   done <"$TARGET_FILE"
 }
 
+cross_combine() {
+  local output_dir="${FETCH_TYPE}_logs"
+  local output_file="${FETCH_TYPE}_$(basename "$TARGET_FILE" ".pwd")_${FETCH_MONTH}.csv"
+
+  debug "csv list: $CSV_LIST"
+  debug "csv combine file: ${output_dir}/${output_file}"
+  # shellcheck disable=SC2086
+  paste -d '\n' $CSV_LIST > "${output_dir}/${output_file}"
+}
+
 parse_args "$@"
-main
+csv_fetch
+cross_combine
