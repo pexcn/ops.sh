@@ -68,8 +68,8 @@ OPTIONS:
     -w, --watch <IP_ADDR>       IP address to detect peer connectivity.
     -D, --dns [NAMESERVER]      DNS server to resolve domain, use system DNS by default.
     -a, --action <COMMANDS>     Actions when network blocked is detected.
-    -r, --retry <COUNT>         Max retries of actions, default is 10 times
-    -i, --interval <SECONDS>    Network connectivity check interval, default is 5 mins.
+    -r, --retry [COUNT]         Max retries of actions, default is 10 times
+    -i, --interval [SECONDS]    Network connectivity check interval, default is 5 mins.
     -v, --verbose               Verbose logging.
     -V, --version               Show version.
     -h, --help                  Show this help message then exit.
