@@ -125,7 +125,7 @@ parse_args() {
   debug "received arguments: $args"
 
   # parameters initialize
-  [ -n "$RETRY" ] || RETRY=20
+  [ -n "$RETRY" ] || RETRY=10
   [ -n "$INTERVAL" ] || INTERVAL=300
 
   # parameters checking
