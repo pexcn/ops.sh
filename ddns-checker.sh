@@ -157,7 +157,7 @@ ddns_check() {
     debug "[${DOMAIN}] now resolved to: ${new_ip}"
 
     if [ "$cur_ip" != "$new_ip" ]; then
-      warn "[${DOMAIN}]: ip changed: ${cur_ip:-NULL} -> ${new_ip:-NULL}"
+      warn "[${DOMAIN}] ip changed: ${cur_ip:-NULL} -> ${new_ip:-NULL}"
       cur_ip=$new_ip
     fi
 
