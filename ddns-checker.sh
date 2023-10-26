@@ -157,7 +157,7 @@ ddns_check() {
     debug "[${DOMAIN}] now resolved to: ${new_ip}"
 
     if [ "$cur_ip" != "$new_ip" ]; then
-      warn "[${DOMAIN}] ip changed: ${cur_ip:-NULL} -> ${new_ip:-NULL}"
+      info "[${DOMAIN}] ip changed: ${cur_ip:-NULL} -> ${new_ip:-NULL}"
       cur_ip=$new_ip
     fi
 
@@ -167,7 +167,7 @@ ddns_check() {
     fi
 
     while ! _is_ip_connectivity "$WATCH_IP"; do
-      warn "network blocked detected, executing action..."
+      warn "network blocked detected, executing the $retry_cnt time action..."
       eval "$ACTION"
       debug "action exit code: $?"
       retry_cnt=$((retry_cnt + 1))
