@@ -70,6 +70,7 @@ OPTIONS:
     -a, --action <COMMANDS>     Actions when network blocked is detected.
     -r, --retry [COUNT]         Max retries of actions, default is 10 times
     -i, --interval [SECONDS]    Network connectivity check interval, default is 5 mins.
+    -s, --strict                Strict mode, the target IP must be pingable.
     -v, --verbose               Verbose logging.
     -V, --version               Show version.
     -h, --help                  Show this help message then exit.
@@ -103,6 +104,10 @@ parse_args() {
       -i | --interval)
         INTERVAL="$2"
         shift 2
+        ;;
+      -s | --strict)
+        STRICT=1
+        shift 1
         ;;
       -v | --verbose)
         VERBOSE=1
@@ -148,6 +153,9 @@ parse_args() {
     warn "detection interval cannot be too short, force set to 60 seconds."
     INTERVAL=60
   fi
+  if [ "$STRICT" = 1 ]; then
+    warn "strict mode is enabled, please make sure the target ip can be pingable."
+  fi
 }
 
 ddns_check() {
@@ -162,8 +170,10 @@ ddns_check() {
     fi
 
     if ! _is_ip_connectivity "$cur_ip"; then
-      warn "ddns ip blocked detected, trying to resolve again."
-      continue
+      if [ "$STRICT" = 1 ]; then
+        warn "ddns ip blocked detected, trying to resolve again."
+        continue
+      fi
     fi
 
     while ! _is_ip_connectivity "$WATCH_IP"; do
