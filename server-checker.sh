@@ -144,8 +144,9 @@ _to_csv() {
 
 _check_cpu_usage() {
   local token="$1"
-  local cmd="awk '{u=\$2+\$4; t=\$2+\$4+\$5; if (NR==1){u1=u; t1=t;} else printf \"%.1f\\n\", (\$2+\$4-u1) * 100 / (t-t1); }' <(grep 'cpu ' /proc/stat) <(sleep 1; grep 'cpu ' /proc/stat)"
-  execute "$token" "$cmd"
+  local cpu_usage_cmd="awk '{u=\$2+\$4; t=\$2+\$4+\$5; if (NR==1){u1=u; t1=t;} else printf \"%.1f\\n\", (\$2+\$4-u1) * 100 / (t-t1); }' <(grep 'cpu ' /proc/stat) <(sleep 1; grep 'cpu ' /proc/stat)"
+  local cpu_usage="$(execute "$token" "$cpu_usage_cmd")"
+  echo "${cpu_usage:=0}"
 }
 
 _check_mem_total() {
