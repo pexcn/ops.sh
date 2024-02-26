@@ -186,22 +186,26 @@ _get_disk_info() {
 
 _check_disk_total() {
   local token="$1"
-  _get_disk_info "$token" | awk '{print $1}'
+  local val="$(_get_disk_info "$token" | awk '{print $1}')"
+  echo "${val:=0}"
 }
 
 _check_disk_usage() {
   local token="$1"
-  _get_disk_info "$token" | awk '{print $2}'
+  local val="$(_get_disk_info "$token" | awk '{print $2}')"
+  echo "${val:=0}"
 }
 
 _check_disk_avail() {
   local token="$1"
-  _get_disk_info "$token" | awk '{print $3}'
+  local val="$(_get_disk_info "$token" | awk '{print $3}')"
+  echo "${val:=0}"
 }
 
 _check_disk_usage_pct() {
   local token="$1"
-  _get_disk_info "$token" | awk '{print $4}'
+  local val="$(_get_disk_info "$token" | awk '{print $4}')"
+  echo "${val:=0%}"
 }
 
 _check_server() {
