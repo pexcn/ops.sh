@@ -7,7 +7,7 @@
 # shellcheck disable=SC2155
 
 PROG_NAME="${0##*/}"
-PROG_VER=20240222
+PROG_VER=20240226
 
 _get_time() {
   date '+%Y-%m-%d %T'
@@ -234,7 +234,7 @@ server_check() {
     if [ -n "$OUTPUT_FILE" ]; then
       _check_server "$target" | _to_csv | tee -a "$OUTPUT_FILE"
     else
-      _check_server "$target" | _to_csv
+      _check_server "$target" | _to_csv | column -s ',' -t
     fi
   done <"$TARGET_FILE"
 }
