@@ -151,13 +151,15 @@ _check_cpu_usage() {
 _check_mem_total() {
   local token="$1"
   local mem_total_cmd="awk '/MemTotal/ { print \$2*1024 }' /proc/meminfo"
-  execute "$token" "$mem_total_cmd"
+  local mem_total="$(execute "$token" "$mem_total_cmd")"
+  echo "${mem_total:=0}"
 }
 
 _check_mem_avail() {
   local token="$1"
   local mem_avail_cmd="awk '/MemAvailable/ { print \$2*1024 }' /proc/meminfo"
-  execute "$token" "$mem_avail_cmd"
+  local mem_avail="$(execute "$token" "$mem_avail_cmd")"
+  echo "${mem_avail:=0}"
 }
 
 _check_mem_usage() {
@@ -171,6 +173,7 @@ _check_mem_usage_pct() {
   local token="$1"
   local mem_total="$(_check_mem_total "$token")"
   local mem_usage="$(_check_mem_usage "$token")"
+  [ "$mem_total" != 0 ] || mem_total=1
   echo $((mem_usage * 100 / mem_total))%
 }
 
