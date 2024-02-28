@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# OS initialize script for "Kylin Linux V10"
+# OS initialize script for "CentOS 7"
 #
 
 _get_os() {
@@ -105,14 +105,14 @@ set_limits() {
 }
 
 set_misc() {
-  echo "not yet..." >/dev/null
+  chmod -x /etc/cron.daily/mlocate
 }
 
 finish_work() {
   date +%s >/.initialized
 }
 
-check_env kylin
+check_env centos
 set_hostname "$1"
 update_bashrc
 set_sysctl
