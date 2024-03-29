@@ -57,11 +57,22 @@ USAGE:
 OPTIONS:
     -t, --target <TARGET_FILE>    Targets and credential information.
     -o, --offset <OFFSET_SEC>     Allowed seconds of offset from local machine, the default value is 60.
+    -c, --callback <CALLBACK>     Callback function when warnings.
     -w, --warning                 Only print host with incorrect time.
     -v, --verbose                 Verbose logging.
     -V, --version                 Show version.
     -h, --help                    Show this help message then exit.
 EOF
+}
+
+_callback() {
+  local login="${1%@*}"
+  local username="${login%%:*}"
+  local password="${login#*:}"
+  local host="${1##*@}"
+  local cmd="$CALLBACK"
+  # FIXME: no output?
+  sshpass -p "$password" ssh -n -q -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" "$username"@"$host" "$cmd"
 }
 
 _check_date() {
@@ -77,6 +88,7 @@ _check_date() {
   debug "username: ${username}, password: ${password}, host: ${host}"
   if [ "$diff_sec_abs" -gt "$OFFSET_SEC" ]; then
     warn "$host -> [NOK], offset ${diff_sec}s"
+    _callback "$1"
   else
     [ "$WARNING_ONLY" = 1 ] || info "$host -> [OK], offset ${diff_sec}s"
   fi
@@ -91,6 +103,10 @@ parse_args() {
         ;;
       -o | --offset)
         OFFSET_SEC="$2"
+        shift 2
+        ;;
+      -c | --callback)
+        CALLBACK="$2"
         shift 2
         ;;
       -w | --warning)
