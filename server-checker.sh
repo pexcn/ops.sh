@@ -222,7 +222,12 @@ _get_data_info() {
     -v root_used="$(echo "$root_val" | awk '{print $2}')" \
     -v disk_avail="$(echo "$disk_val" | awk '{print $3}')" \
     -v root_avail="$(echo "$root_val" | awk '{print $3}')" \
-    '{printf "%s %s %s %.f%\n", disk_size-root_size, disk_used-root_used, disk_avail-root_avail, (disk_used-root_used)*100/(disk_size-root_size)}'
+    '{
+      if (disk_size==root_size) {
+        disk_size+=1
+      }
+      printf "%s %s %s %.f%\n", disk_size-root_size, disk_used-root_used, disk_avail-root_avail, (disk_used-root_used)*100/(disk_size-root_size)
+    }'
 }
 
 _check_data_total() {
