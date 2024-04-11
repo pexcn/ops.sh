@@ -209,6 +209,46 @@ _check_disk_usage_pct() {
   echo "${val:=0%}"
 }
 
+_get_data_info() {
+  local token="$1"
+  local disk_val="$(_get_disk_info "$token")"
+  # see also the `-P | --portability` option
+  local root_cmd="df -l -t vfat -t xfs -t ext4 --output=size,used,avail,pcent --total / /boot | tail -1"
+  local root_val="$(execute "$token" "$root_cmd")"
+  echo | awk \
+    -v disk_size="$(echo "$disk_val" | awk '{print $1}')" \
+    -v root_size="$(echo "$root_val" | awk '{print $1}')" \
+    -v disk_used="$(echo "$disk_val" | awk '{print $2}')" \
+    -v root_used="$(echo "$root_val" | awk '{print $2}')" \
+    -v disk_avail="$(echo "$disk_val" | awk '{print $3}')" \
+    -v root_avail="$(echo "$root_val" | awk '{print $3}')" \
+    '{printf "%s %s %s %.f%\n", disk_size-root_size, disk_used-root_used, disk_avail-root_avail, (disk_used-root_used)*100/(disk_size-root_size)}'
+}
+
+_check_data_total() {
+  local token="$1"
+  local val="$(_get_data_info "$token" | awk '{print $1}')"
+  echo "${val:=0}"
+}
+
+_check_data_usage() {
+  local token="$1"
+  local val="$(_get_data_info "$token" | awk '{print $2}')"
+  echo "${val:=0}"
+}
+
+_check_data_avail() {
+  local token="$1"
+  local val="$(_get_data_info "$token" | awk '{print $3}')"
+  echo "${val:=0}"
+}
+
+_check_data_usage_pct() {
+  local token="$1"
+  local val="$(_get_data_info "$token" | awk '{print $4}')"
+  echo "${val:=0%}"
+}
+
 _check_server() {
   local token="$1"
   local ip_address="${token##*@}"
@@ -222,6 +262,10 @@ _check_server() {
   _check_disk_usage "$token" | _kb2gb
   _check_disk_avail "$token" | _kb2gb
   _check_disk_usage_pct "$token"
+  _check_data_total "$token" | _kb2gb | _ceil
+  _check_data_usage "$token" | _kb2gb
+  _check_data_avail "$token" | _kb2gb
+  _check_data_usage_pct "$token"
 }
 
 server_check() {
