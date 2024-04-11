@@ -124,7 +124,7 @@ parse_args() {
   fi
 }
 
-CSV_HEADER="ip_address,cpu_usage,mem_total,mem_usage,mem_avail,mem_usage_pct,disk_total,disk_usage,disk_avail,disk_usage_pct"
+CSV_HEADER="ip_address,cpu_usage,mem_total,mem_usage,mem_avail,mem_usage_pct,disk_total,disk_usage,disk_avail,disk_usage_pct,data_total,data_usage,data_avail,data_usage_pct"
 
 _byte2gb() {
   awk '{printf "%.1f\n", $1/1024/1024/1024}'
