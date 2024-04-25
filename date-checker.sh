@@ -88,7 +88,7 @@ _check_date() {
   debug "username: ${username}, password: ${password}, host: ${host}"
   if [ "$diff_sec_abs" -gt "$OFFSET_SEC" ]; then
     warn "$host -> [NOK], offset ${diff_sec}s"
-    _callback "$1"
+    [ -z "$CALLBACK" ] || _callback "$1"
   else
     [ "$WARNING_ONLY" = 1 ] || info "$host -> [OK], offset ${diff_sec}s"
   fi
