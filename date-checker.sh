@@ -72,7 +72,7 @@ _callback() {
   local host="${1##*@}"
   local cmd="$CALLBACK"
   # FIXME: no output?
-  sshpass -p "$password" ssh -n -q -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" "$username"@"$host" "$cmd"
+  sshpass -p "$password" ssh -n -q -o "StrictHostKeyChecking=no" -o "ConnectTimeout=3" "$username"@"$host" "$cmd"
 }
 
 _check_date() {
@@ -81,7 +81,7 @@ _check_date() {
   local password="${login#*:}"
   local host="${1##*@}"
   # ref: https://stackoverflow.com/questions/37066540/bash-while-loop-is-not-looping
-  local server_time="$(sshpass -p "$password" ssh -n -q -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" "$username"@"$host" "date '+%s'" 2>/dev/null)"
+  local server_time="$(sshpass -p "$password" ssh -n -q -o "StrictHostKeyChecking=no" -o "ConnectTimeout=3" "$username"@"$host" "date '+%s'" 2>/dev/null)"
   local local_time="$(date '+%s')"
   local diff_sec=$((server_time-local_time))
   local diff_sec_abs=${diff_sec#-}
