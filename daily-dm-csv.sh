@@ -3,7 +3,7 @@
 # @usage: see @cron section
 # @cron: `30 08 * * * root OUTPUT2LOG=1 LOGIN_INFO="SYSDBA/SYSDBA@127.0.0.1:5236" /srv/ops.sh/daily-dm-csv.sh`
 # @author: Sing Yu Chan
-# @version: 20230926-2
+# @version: 20250227
 #
 # shellcheck disable=SC2155
 
@@ -68,6 +68,10 @@ _get_log_file() {
   echo "${p1}_${p2}_${p3}.csv"
 }
 
+get_date() {
+  date +%Y%m%d
+}
+
 get_all_sessions() {
   _exec_sql "SELECT COUNT(1) FROM SYS.V\$SESSIONS;" | _extract_value
 }
@@ -110,6 +114,7 @@ get_tablespace_size() {
 }
 
 combine_output() {
+  get_date
   get_all_sessions
   get_active_sessions
   get_cpu_cores

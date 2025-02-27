@@ -3,7 +3,7 @@
 # @usage: see @cron section
 # @cron: `30 08 * * * root OUTPUT2LOG=1 LOGIN_INFO="root/password@127.0.0.1:3306" /srv/ops.sh/daily-mariadb-csv.sh`
 # @author: Sing Yu Chan
-# @version: 20230928
+# @version: 20250227
 #
 # shellcheck disable=SC2155
 
@@ -63,6 +63,10 @@ _get_log_file() {
   echo "${p1}_${p2}_${p3}.csv"
 }
 
+get_date() {
+  date +%Y%m%d
+}
+
 get_max_connections() {
   # a.k.a.: `SHOW GLOBAL STATUS LIKE 'Max_used_connections';`
   _exec_sql "SELECT VARIABLE_VALUE FROM INFORMATION_SCHEMA.GLOBAL_STATUS WHERE VARIABLE_NAME='Max_used_connections';"
@@ -103,6 +107,7 @@ get_db_size() {
 }
 
 combine_output() {
+  get_date
   get_max_connections
   get_cur_connections
   get_cpu_cores

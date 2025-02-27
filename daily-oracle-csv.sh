@@ -3,7 +3,7 @@
 # @usage: see @cron section
 # @cron: `30 08 * * * root OUTPUT2LOG=1 LOGIN_INFO="SYSTEM/password@127.0.0.1:1521/DEV" /srv/ops.sh/daily-oracle-csv.sh`
 # @author: Sing Yu Chan
-# @version: 20231007
+# @version: 20250227
 #
 # shellcheck disable=SC2155
 
@@ -60,6 +60,10 @@ _get_log_file() {
   echo "${p1}_${p2}_${p3}_${p4}.csv"
 }
 
+get_date() {
+  date +%Y%m%d
+}
+
 get_all_sessions() {
   _exec_sql "SELECT COUNT(1) FROM V\$SESSION;"
 }
@@ -107,6 +111,7 @@ get_tablespace_used_percentage() {
 }
 
 combine_output() {
+  get_date
   get_all_sessions
   get_active_sessions
   get_cpu_cores

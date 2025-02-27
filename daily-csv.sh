@@ -3,7 +3,7 @@
 # @usage: see @cron section
 # @cron: `30 08 * * * root OUTPUT2LOG=1 /srv/ops.sh/daily-csv.sh`
 # @author: Sing Yu Chan
-# @version: 20230925
+# @version: 20250227
 #
 # shellcheck disable=SC2155
 
@@ -49,6 +49,10 @@ _get_log_file() {
 
 real_cpu_usage() {
   awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else printf "%.2f\n", ($2+$4-u1) * 100 / (t-t1); }' <(grep 'cpu ' /proc/stat) <(sleep 1; grep 'cpu ' /proc/stat)
+}
+
+get_date() {
+  date +%Y%m%d
 }
 
 get_cpu_cores() {
@@ -99,6 +103,7 @@ get_disk_usage_percent() {
 }
 
 combine_output() {
+  get_date
   get_cpu_cores
   get_cpu_usage
   get_mem_size
